@@ -1,0 +1,99 @@
+# Pipeline de Azure DevOps: build de Next.js (standalone) y deploy a Azure App Service (Linux)
+# Ver DEPLOY-AZURE.md para crear los recursos y la service connection.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  # Nombre de la service connection (Project settings > Service connections)
+  azureSubscription: 'azure-lino-luna'
+  # Nombre del Web App creado en Azure
+  webAppName: 'lino-luna-web'
+  nodeVersion: '22.x'
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+  NEXT_TELEMETRY_DISABLED: '1'
+
+stages:
+  - stage: Build
+    displayName: Build
+    jobs:
+      - job: Build
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: NodeTool@0
+            displayName: Instalar Node $(nodeVersion)
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - task: Cache@2
+            displayName: Cache npm
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: 'npm | "$(Agent.OS)"'
+              path: $(npm_config_cache)
+
+          - script: npm ci
+            displayName: npm ci
+
+          - script: npm run lint
+            displayName: Lint
+
+          - script: npm run build
+            displayName: next build
+
+          # El server standalone no incluye public/ ni .next/static: se copian a mano
+          - script: |
+              set -e
+              cp -r public .next/standalone/public
+              cp -r .next/static .next/standalone/.next/static
+              cp startup.sh .next/standalone/startup.sh
+            displayName: Preparar paquete standalone
+
+          - task: ArchiveFiles@2
+            displayName: Comprimir paquete
+            inputs:
+              rootFolderOrFile: .next/standalone
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/app.zip
+              replaceExistingArchive: true
+
+          - publish: $(Build.ArtifactStagingDirectory)/app.zip
+            artifact: drop
+            displayName: Publicar artefacto
+
+  - stage: Deploy
+    displayName: Deploy a App Service
+    dependsOn: Build
+    # Solo despliega en commits a main (no en PRs)
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: Deploy
+        pool:
+          vmImage: ubuntu-latest
+        # El environment permite agregar aprobaciones manuales en Azure DevOps
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: Desplegar en $(webAppName)
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    appType: webAppLinux
+                    appName: $(webAppName)
+                    package: $(Pipeline.Workspace)/drop/app.zip
+                    runtimeStack: 'NODE|22-lts'
+                    startUpCommand: 'sh startup.sh'
+                    appSettings: >-
+                      -SCM_DO_BUILD_DURING_DEPLOYMENT false
+                      -NEXT_TELEMETRY_DISABLED 1

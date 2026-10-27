@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Paleta: lino crema, arena, salvia, arcilla y tinta cálida */
+@theme {
+  --color-cream: #f7f3ee;
+  --color-sand: #e9dfd3;
+  --color-oat: #d8c8b4;
+  --color-sage: #8a9a82;
+  --color-sage-dark: #5f6f58;
+  --color-clay: #b8643e;
+  --color-clay-dark: #9a4f2e;
+  --color-ink: #2b2825;
+  --color-muted: #6f675f;
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-fraunces);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-oat);
+}
