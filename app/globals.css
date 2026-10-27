@@ -1,19 +1,29 @@
 @import "tailwindcss";
 
-/* Paleta: lino crema, arena, salvia, arcilla y tinta cálida */
+/* Paleta verde: lima #A7F542, hoja #2F9E44, bosque #1B4332, menta #F1FAEE, durazno #FFB4A2 */
 @theme {
-  --color-cream: #f7f3ee;
-  --color-sand: #e9dfd3;
-  --color-oat: #d8c8b4;
-  --color-sage: #8a9a82;
-  --color-sage-dark: #5f6f58;
-  --color-clay: #b8643e;
-  --color-clay-dark: #9a4f2e;
-  --color-ink: #2b2825;
-  --color-muted: #6f675f;
+  --color-mint: #f1faee;
+  --color-mist: #dcefd6;
+  --color-lime: #a7f542;
+  --color-leaf: #2f9e44;
+  --color-leaf-dark: #237a35;
+  --color-forest: #1b4332;
+  --color-moss: #4a6b5a;
+  --color-peach: #ffb4a2;
 
   --font-sans: var(--font-inter);
   --font-serif: var(--font-fraunces);
+
+  --animate-banner-progress: banner-progress 5s linear forwards;
+
+  @keyframes banner-progress {
+    from {
+      width: 0%;
+    }
+    to {
+      width: 100%;
+    }
+  }
 }
 
 html {
@@ -21,10 +31,10 @@ html {
 }
 
 body {
-  background: var(--color-cream);
-  color: var(--color-ink);
+  background: var(--color-mint);
+  color: var(--color-forest);
 }
 
 ::selection {
-  background: var(--color-oat);
+  background: var(--color-lime);
 }
