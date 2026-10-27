@@ -1,0 +1,2 @@
+# startup.sh se ejecuta en Linux (App Service): debe tener saltos de línea LF
+*.sh text eol=lf
